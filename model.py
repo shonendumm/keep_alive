@@ -4,8 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import time
 
-pool_instance = "A"
-pool_time_limit = 180
+
 
 
 # Create a engine to our database
@@ -68,7 +67,7 @@ def update_runner(runner, pool):
     finally:
         session.close()
 
-def check_runner():
+def check_runner(pool_instance, pool_time_limit):
     runner = get_main_runner()
 
     current_pool = runner.pool
