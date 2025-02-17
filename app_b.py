@@ -1,6 +1,6 @@
 from flask import Flask
 from datetime import datetime
-from model import get_main_runner, check_runner
+from model import get_main_runner, check_or_change_runner
 import threading
 import time
 
@@ -27,15 +27,15 @@ def run_task(pool_instance):
         time.sleep(1)
     print(f"Task completed in {pool_instance}")
 
-def loop_check_runner(pool_instance, pool_time_limit):
+def loop_check_or_change_runner(pool_instance, pool_time_limit):
     while True:
         # with app.app_context():
-        if check_runner(pool_instance, pool_time_limit):
+        if check_or_change_runner(pool_instance, pool_time_limit):
             run_task(pool_instance)
         time.sleep(check_frequency_seconds)
 
 # create daemon to check runner
-threading.Thread(target=loop_check_runner, args=[pool_instance, pool_time_limit], daemon=True).start()
+threading.Thread(target=loop_check_or_change_runner, args=[pool_instance, pool_time_limit], daemon=True).start()
 
 
 

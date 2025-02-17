@@ -52,7 +52,7 @@ def get_main_runner():
     try:
         runner = session.query(Runner).filter_by(id=1).first()
         if runner is None:
-            runner = create_runner(pool_instance)
+            runner = create_runner("A") # use pool A as default
         return runner
     finally:
         session.close()
@@ -67,7 +67,7 @@ def update_runner(runner, pool):
     finally:
         session.close()
 
-def check_runner(pool_instance, pool_time_limit):
+def check_or_change_runner(pool_instance, pool_time_limit):
     runner = get_main_runner()
 
     current_pool = runner.pool
@@ -77,13 +77,13 @@ def check_runner(pool_instance, pool_time_limit):
 
     if current_pool != pool_instance and delta.total_seconds() > pool_time_limit:
         update_runner(runner, pool_instance)
-        print(f"Changed pool to {pool_instance}")
+        print(f"Changed runner to {pool_instance}")
         return True
     if current_pool != pool_instance and delta.total_seconds() <= pool_time_limit:
-        print(f"Not enough time has passed since last pool change")
+        print(f"Other runner is still alive")
         return False
     if current_pool == pool_instance:
-        print(f"Pool is already {pool_instance}")
+        print(f"Runner is already {pool_instance}")
         update_runner(runner, pool_instance)
         return True
 
