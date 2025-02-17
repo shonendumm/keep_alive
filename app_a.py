@@ -20,15 +20,22 @@ def model():
     runner = get_main_runner()
     return f"runner pool: {runner.pool}, updated: {runner.updated}"
 
+def run_task(pool_instance):
+    print(f"Running task in {pool_instance}")
+    for i in range(10):
+        print(i)
+        time.sleep(1)
+    print(f"Task completed in {pool_instance}")
+
 def loop_check_runner(pool_instance, pool_time_limit):
     while True:
-        with app.app_context():
-            check_runner(pool_instance, pool_time_limit)
-            time.sleep(check_frequency_seconds)
+        # with app.app_context():
+        if check_runner(pool_instance, pool_time_limit):
+            run_task(pool_instance)
+        time.sleep(check_frequency_seconds)
 
 # create daemon to check runner
 threading.Thread(target=loop_check_runner, args=[pool_instance, pool_time_limit], daemon=True).start()
-
 
 
 if __name__ == "__main__":
