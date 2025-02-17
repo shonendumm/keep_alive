@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import time
 
-pool_instance = "B"
+pool_instance = "A"
 pool_time_limit = 180
 
 
@@ -31,29 +31,42 @@ class Runner(Base):
 
 def create_runner(pool):
     session = Session()
-    runner = Runner(pool=pool, updated=datetime.now())
-    session.add(runner)
-    session.commit()
-    return runner
+    try:
+        runner = Runner(pool=pool, updated=datetime.now())
+        session.add(runner)
+        session.commit()
+        print(f"Created runner with pool {pool}")
+        return runner
+    finally:
+        session.close()
 
 def get_runner(pool):
     session = Session()
-    runner = session.query(Runner).filter_by(pool=pool).first()
-    return runner
+    try:
+        runner = session.query(Runner).filter_by(pool=pool).first()
+        return runner
+    finally:
+        session.close()
 
 def get_main_runner():
     session = Session()
-    runner = session.query(Runner).filter_by(id=1).first()
-    if runner is None:
-        runner = create_runner(pool_instance)
-    return runner
+    try:
+        runner = session.query(Runner).filter_by(id=1).first()
+        if runner is None:
+            runner = create_runner(pool_instance)
+        return runner
+    finally:
+        session.close()
 
 def update_runner(runner, pool):
     session = Session()
-    runner.pool = pool
-    runner.updated = datetime.now()
-    session.add(runner)
-    session.commit()
+    try:
+        runner.pool = pool
+        runner.updated = datetime.now()
+        session.add(runner)
+        session.commit()
+    finally:
+        session.close()
 
 def check_runner():
     runner = get_main_runner()
@@ -74,31 +87,6 @@ def check_runner():
         print(f"Pool is already {pool_instance}")
         update_runner(runner, pool_instance)
         return True
-    
-
-
-
-
-
 
 # Create all tables in the engine
 Base.metadata.create_all(engine)
-
-# Create a new session
-# session = Session()
-
-# # Create a new user
-# new_user = User(name='John Doe', email='john@example.com')
-
-# # Add the new user to the session
-# session.add(new_user)
-
-# # Commit the transaction
-# session.commit()
-
-# # Query the users
-# users = session.query(User).all()
-
-# # Print the users
-# for user in users:
-#     print(user)
