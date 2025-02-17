@@ -1,0 +1,104 @@
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+import time
+
+pool_instance = "B"
+pool_time_limit = 180
+
+
+# Create a engine to our database
+engine = create_engine('sqlite:///test.db')
+
+# Create a configured "Session" class
+Session = sessionmaker(bind=engine)
+
+# Create a base class for declarative class definitions
+Base = declarative_base()
+
+# Define a class that inherits from Base and represents our table
+class Runner(Base):
+    __tablename__ = 'runners'
+    
+    id = Column(Integer, primary_key=True)
+    pool = Column(String)
+    updated = Column(DateTime)
+
+    def __repr__(self):
+        return f"Runner(id={self.id}, pool='{self.pool}', updated='{self.updated}')"
+    
+
+def create_runner(pool):
+    session = Session()
+    runner = Runner(pool=pool, updated=datetime.now())
+    session.add(runner)
+    session.commit()
+    return runner
+
+def get_runner(pool):
+    session = Session()
+    runner = session.query(Runner).filter_by(pool=pool).first()
+    return runner
+
+def get_main_runner():
+    session = Session()
+    runner = session.query(Runner).filter_by(id=1).first()
+    if runner is None:
+        runner = create_runner(pool_instance)
+    return runner
+
+def update_runner(runner, pool):
+    session = Session()
+    runner.pool = pool
+    runner.updated = datetime.now()
+    session.add(runner)
+    session.commit()
+
+def check_runner():
+    runner = get_main_runner()
+
+    current_pool = runner.pool
+    runner_updated = runner.updated
+    now = datetime.now()
+    delta = now - runner_updated
+
+    if current_pool != pool_instance and delta.total_seconds() > pool_time_limit:
+        update_runner(runner, pool_instance)
+        print(f"Changed pool to {pool_instance}")
+        return True
+    if current_pool != pool_instance and delta.total_seconds() <= pool_time_limit:
+        print(f"Not enough time has passed since last pool change")
+        return False
+    if current_pool == pool_instance:
+        print(f"Pool is already {pool_instance}")
+        update_runner(runner, pool_instance)
+        return True
+    
+
+
+
+
+
+
+# Create all tables in the engine
+Base.metadata.create_all(engine)
+
+# Create a new session
+# session = Session()
+
+# # Create a new user
+# new_user = User(name='John Doe', email='john@example.com')
+
+# # Add the new user to the session
+# session.add(new_user)
+
+# # Commit the transaction
+# session.commit()
+
+# # Query the users
+# users = session.query(User).all()
+
+# # Print the users
+# for user in users:
+#     print(user)
